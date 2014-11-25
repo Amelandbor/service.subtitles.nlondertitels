@@ -104,16 +104,16 @@ def append_subtitle(item):
     item['file_name'])
   xbmcplugin.addDirectoryItem(handle=int(sys.argv[1]), url=url, listitem=listitem, isFolder=False)
 
-def query_Film(name, imdb, langs, file_original_path):
+def query_Film(name, imdb, file_original_path):
   if imdb:
     searchurl = "%s/?extra=q&id=%s&pagenr=1&x=0&y=" %(self_host,imdb)
-    query(searchurl, langs, file_original_path)
+    query(searchurl, file_original_path)
   else:
     name = urllib.quote(name.replace(" ", "_"))
     searchurl = "%s/?extra=q&id=%s&pagenr=1&x=0&y=" %(self_host,name)
-    query(searchurl, langs, file_original_path, )
+    query(searchurl, file_original_path)
 
-def query(searchurl, langs, file_original_path):
+def query(searchurl, file_original_path):
   sublinks = []
   socket.setdefaulttimeout(3)
   log(__name__, "search='%s', addon_version=%s" % (searchurl, __version__))
@@ -126,38 +126,35 @@ def query(searchurl, langs, file_original_path):
 
   file_name = str(os.path.basename(file_original_path)).split("-")[-1].lower()
 
-  for subs in soup2("a"):
+  if soup2 != None: 
+    for subs in soup2("a"):
 
-    try:
-      description = subs.findNext("i").string
+      try:
+        description = subs.findNext("i").string
 
-      sub_original_link = subs['href']
+        sub_original_link = subs['href']
 
-      sub_download_link = sub_original_link.rsplit('/', 1)[0].replace("subtitle", "download")
+        sub_download_link = sub_original_link.rsplit('/', 1)[0].replace("subtitle", "download")
 
-      link = "%s" % (self_host + sub_download_link)
+        link = "%s" % (self_host + sub_download_link)
 
-      sublinks.append({'rating': '0', 'file_name': file_name, 'description': "%s - %s" %(subs.string, description), 'link': link, 'lang': "nl"})
+        sublinks.append({'rating': '0', 'file_name': file_name, 'description': "%s - %s" %(subs.string, description), 'link': link, 'lang': "nl"})
 
-    except:
-      log(__name__, "Error in BeautifulSoup")
-      pass
+      except:
+        log(__name__, "Error in BeautifulSoup")
+        pass
+
+  else:
+    xbmc.executebuiltin((u'Notification(%s,%s %s)' % (__scriptname__ , __language__(32004), file_name)).encode('utf-8'))
 
   log(__name__, "sub='%s'" % (sublinks))
 
   for s in sublinks:
     append_subtitle(s)
 
-def search_manual(searchstr, languages, filename):
-  xbmc.executebuiltin((u'Notification(%s,%s)' % (__scriptname__ , __language__(24000))).encode('utf-8'))
-  return False
-  search_string = prepare_search_string(searchstr)
-  url = self_host + "/?extra=q&id=" + search_string + '&pagenr=1&x=0&y='
-  content, response_url = geturl(url)
-
-  if content is not None:
-    return False
-    # getallsubs(content, languages, filename)
+def search_manual(mansearchstr, file_original_path):
+  searchurl = "%s/?extra=q&id=%s&pagenr=1&x=0&y=" %(self_host, mansearchstr)
+  query(searchurl, file_original_path)
 
 def search_filename(filename, languages):
   title, year = xbmc.getCleanMovieTitle(filename)
@@ -175,9 +172,9 @@ def Search(item):
   log(__name__, "Searching NLondertitels.com='%s', filename='%s', addon_version=%s" % (item, filename, __version__))
 
   if item['mansearch']:
-    search_manual(item['mansearchstr'], item['3let_language'], filename)
+    search_manual(item['mansearchstr'], filename)
   elif item['title']:
-    query_Film(item['title'], item['imdb'], item['3let_language'], filename)
+    query_Film(item['title'], item['imdb'], filename)
   else:
     search_filename(filename, item['3let_language'])
 

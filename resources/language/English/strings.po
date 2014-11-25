@@ -28,6 +28,10 @@ msgctxt "#32003"
 msgid "Download didn't contain a subtitle file"
 msgstr ""
 
+msgctxt "#32004"
+msgid "No subtitles found for"
+msgstr ""
+
 msgctxt "#24000"
 msgid "Manual Search is not enabled currently"
 msgstr ""
